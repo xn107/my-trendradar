@@ -102,8 +102,6 @@ class RemoteStorageBackend(SQLiteStorageMixin, StorageBackend):
         s3_config = BotoConfig(
             s3={"addressing_style": "virtual"},
             signature_version=signature_version,
-            request_checksum_calculation="when_required",
-            response_checksum_validation="when_required",
         )
 
         client_kwargs = {
