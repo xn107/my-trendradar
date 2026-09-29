@@ -59,39 +59,12 @@ jobs:
           fetch-depth: 1
           clean: true
 
-      - name: Check Expiration
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          WORKFLOW_FILE="crawler.yml"
-          API_URL="repos/${{ github.repository }}/actions/workflows/$WORKFLOW_FILE/runs"
-
-          TOTAL=$(gh api "$API_URL" --jq '.total_count')
-          if [ -z "$TOTAL" ] || [ "$TOTAL" -eq 0 ]; then
-            echo "No previous runs found, skipping expiration check"
-            exit 0
-          fi
-
-          LAST_PAGE=$(( (TOTAL + 99) / 100 ))
-          FIRST_RUN_DATE=$(gh api "$API_URL?per_page=100&page=$LAST_PAGE" --jq '.workflow_runs[-1].created_at')
-
-          if [ -n "$FIRST_RUN_DATE" ]; then
-            CURRENT_TIMESTAMP=$(date +%s)
-            FIRST_RUN_TIMESTAMP=$(date -d "$FIRST_RUN_DATE" +%s)
-            DIFF_SECONDS=$((CURRENT_TIMESTAMP - FIRST_RUN_TIMESTAMP))
-            LIMIT_SECONDS=604800
-
-            if [ $DIFF_SECONDS -gt $LIMIT_SECONDS ]; then
-              echo "⚠️ 试用期已结束，请运行 'Check In' 签到续期"
-              echo "⚠️ Trial expired. Run 'Check In' to renew."
-              gh workflow disable "$WORKFLOW_FILE"
-              exit 1
-            else
-              DAYS_LEFT=$(( (LIMIT_SECONDS - DIFF_SECONDS) / 86400 ))
-              echo "✅ 试用期剩余 ${DAYS_LEFT} 天，到期前请运行 'Check In' 签到续期"
-              echo "✅ Trial: ${DAYS_LEFT} days left. Run 'Check In' before expiry to renew."
-            fi
-          fi
+      # --------------------------------------------------------------------------------
+      # ⚠️ 已移除原项目的 "Check Expiration" 步骤（7 天签到限制）
+      #    原步骤逻辑：查询 crawler.yml 自身最早的运行记录，超过 604800 秒（7 天）
+      #    则执行 `gh workflow disable crawler.yml` 并 exit 1，导致后续步骤被 if: success() 跳过。
+      #    本步骤不产出任何输出、不被其他步骤引用，移除后对抓取与推送功能无任何影响。
+      # --------------------------------------------------------------------------------
 
 
       # --------------------------------------------------------------------------------
